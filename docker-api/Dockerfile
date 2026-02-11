@@ -1,6 +1,6 @@
 # Use the official Node.js image with a specific version
 # 'slim' images are smaller and more secure for production
-FROM node:25.6.0-slim
+FROM node:25.6.0 AS build
 
 # Set the working directory inside the container
 # All subsequent commands (RUN, COPY, CMD) will execute here
@@ -18,10 +18,19 @@ COPY . .
 
 # Execute the build script (compiles TypeScript/NestJS code to JavaScript)
 RUN npm run build
+RUN npm ci --omit=dev && npm cache clean --force
+
+FROM node:25.6.0-alpine3.23
+
+WORKDIR /usr/app
+
+
+COPY --from=build /usr/app/dist ./dist
+COPY --from=build /usr/app/node_modules ./node_modules
 
 # Inform Docker that the container listens on port 3000 at runtime
 EXPOSE 3000
 
 # Define the command to run the app in production mode
 # Using the array syntax (exec form) is preferred for signal handling (e.g., SIGTERM)
-CMD ["npm", "start"]
+CMD ["node", "dist/main"]
