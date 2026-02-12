@@ -1,0 +1,31 @@
+services:
+  rocket-db:
+    image: mysql:8
+    container_name: rocket-db
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=rocket-db
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=root
+    networks:
+      - rocket-network
+
+  rocket-api:
+    build:
+      context: .
+    container_name: rocket-api
+    ports:
+      - 3000:3000
+    depends_on:
+      - rocket-db
+    networks:
+      - rocket-network
+
+networks:
+  rocket-network:
+    driver: bridge
+
+volumes:
+  db:
